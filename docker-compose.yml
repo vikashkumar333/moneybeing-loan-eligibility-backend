@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: moneybeing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: moneybeing_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d moneybeing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - moneybeing-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: moneybeing-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - moneybeing-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moneybeing-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/moneybeing_db
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: moneybeing-production-super-secret-key-32-chars-minimum
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      CREDIT_SCORE_PROVIDER: mock
+      MOCK_CREDIT_SCORE: 742
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - moneybeing-network
+
+  frontend:
+    build:
+      context: ../moneybeing-loan-eligibility-frontend
+      dockerfile: Dockerfile
+    container_name: moneybeing-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    networks:
+      - moneybeing-network
+
+volumes:
+  postgres_data:
+    name: moneybeing_postgres_data
+
+networks:
+  moneybeing-network:
+    name: moneybeing-network
+    driver: bridge

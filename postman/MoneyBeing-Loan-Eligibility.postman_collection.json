@@ -1,0 +1,501 @@
+{
+  "info": {
+    "_postman_id": "9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
+    "name": "MoneyBeing Loan Eligibility & Lead Management System",
+    "description": "Production-grade REST API collection for MoneyBeing Loan Eligibility & Lead Management System including Authentication, Customer Lead Application & BRE Engine, Lead Management, Dashboard KPIs, and Dynamic BRE Rule Configuration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Admin Login (Sets Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.environment.set('access_token', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"AdminPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Customer Loan Application & BRE",
+      "item": [
+        {
+          "name": "Submit Eligible Loan Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.lead_id) {",
+                  "    pm.environment.set('lead_id', jsonData.lead_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Rohan Sharma\",\n    \"mobile\": \"9876547500\",\n    \"email\": \"rohan@example.com\",\n    \"date_of_birth\": \"1992-05-15\",\n    \"city\": \"Mumbai\",\n    \"pincode\": \"400001\",\n    \"loan_type\": \"Home Loan\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": 75000,\n    \"loan_amount\": 2000000,\n    \"property_value\": 3500000,\n    \"consent\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Rejected Loan Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Amit Patel\",\n    \"mobile\": \"9876546500\",\n    \"email\": \"amit@example.com\",\n    \"date_of_birth\": \"1990-01-01\",\n    \"city\": \"Delhi\",\n    \"pincode\": \"110001\",\n    \"loan_type\": \"Home Loan\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": 25000,\n    \"loan_amount\": 1900000,\n    \"property_value\": 2000000,\n    \"consent\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Duplicate Lead Check (Expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Duplicate Rohan\",\n    \"mobile\": \"9876547500\",\n    \"email\": \"dup@example.com\",\n    \"date_of_birth\": \"1992-05-15\",\n    \"city\": \"Mumbai\",\n    \"pincode\": \"400001\",\n    \"loan_type\": \"Home Loan\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": 75000,\n    \"loan_amount\": 2000000,\n    \"property_value\": 3500000,\n    \"consent\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Lead Management (Admin)",
+      "item": [
+        {
+          "name": "List Paginated Leads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads?page=1&page_size=20&sort_by=created_at&sort_order=desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "created_at"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search & Filter Leads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads?search=Rohan&bre_status=Eligible&loan_type=Home Loan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Rohan"
+                },
+                {
+                  "key": "bre_status",
+                  "value": "Eligible"
+                },
+                {
+                  "key": "loan_type",
+                  "value": "Home Loan"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Lead Detail with BRE Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "leads",
+                "{{lead_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Dashboard (Admin)",
+      "item": [
+        {
+          "name": "Get Dashboard KPI Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Lead Distribution Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/lead-distribution",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "lead-distribution"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Business Rule Engine CRUD (Admin)",
+      "item": [
+        {
+          "name": "List All Active/Inactive BRE Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bre-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bre-rules"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create New BRE Rule",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('rule_id', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"rule_name\": \"Minimum Income Tier 1\",\n    \"field_name\": \"monthly_income\",\n    \"operator\": \">=\",\n    \"rule_value\": \"45000\",\n    \"failure_message\": \"Applicant income below tier 1 threshold of 45,000\",\n    \"is_active\": true,\n    \"priority\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bre-rules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bre-rules"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update BRE Rule Threshold",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"rule_value\": \"50000\",\n    \"failure_message\": \"Applicant income below updated threshold of 50,000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bre-rules/{{rule_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bre-rules",
+                "{{rule_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle BRE Rule Status (Activate/Deactivate)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bre-rules/{{rule_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bre-rules",
+                "{{rule_id}}",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Soft Delete BRE Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bre-rules/{{rule_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bre-rules",
+                "{{rule_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
